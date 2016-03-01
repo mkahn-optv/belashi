@@ -22,7 +22,10 @@
     // Do any additional setup after loading the view, typically from a nib.
     NSUInteger r = arc4random_uniform(100000);
     
-    self.webView.delegate = self;
+    if ([self respondsToSelector:@selector(setAutomaticallyAdjustsScrollViewInsets:)]) {
+        [self setAutomaticallyAdjustsScrollViewInsets:NO];
+    }
+        self.webView.delegate = self;
     [self.webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://%@/opp/io.overplay.mainframe/app/control/index.html?decache=%ld", self.op.ipAddress, r]]]];
     self.bannerLabel.text = self.op.systemName;
     [SVProgressHUD setBackgroundColor:[[UIColor whiteColor] colorWithAlphaComponent:0]];

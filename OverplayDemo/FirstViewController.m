@@ -94,7 +94,6 @@
     
     self.foundUnitsTable.dataSource = self;
     self.foundUnitsTable.delegate = self;
-    [self.foundUnitsTable setSeparatorInset:UIEdgeInsetsZero];
     
     self.availableOverplayers = [NSMutableArray new];
     
