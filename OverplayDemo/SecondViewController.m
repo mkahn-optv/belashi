@@ -25,6 +25,7 @@
     self.webView.delegate = self;
     [self.webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://%@/opp/io.overplay.mainframe/app/control/index.html?decache=%ld", self.op.ipAddress, r]]]];
     self.bannerLabel.text = self.op.systemName;
+    [SVProgressHUD setBackgroundColor:[[UIColor whiteColor] colorWithAlphaComponent:0]];
     [SVProgressHUD showWithStatus:@"Loading..."];
 }
 
