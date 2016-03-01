@@ -19,7 +19,7 @@
 @property (strong, nonatomic) NSMutableArray *availableOverplayers;
 @property (strong, nonatomic) NSString *iphoneIPAddress;
 
-@property (strong, nonatomic) IBOutlet UIActivityIndicatorView *spinner;
+@property (strong, nonatomic) UIRefreshControl *refreshControl;
 
 @end
 
@@ -27,18 +27,15 @@
 
 
 -(void)findOverplayers {
-    
-    [self.spinner startAnimating];
+    [self.refreshControl beginRefreshing];
     NSString *ipaddr = [NetUtils getIPAddress];
     if ([ipaddr hasPrefix:@"error"]){
-        [self.spinner stopAnimating];
+        [self.refreshControl endRefreshing];
 
         self.mainStatusLabel.text = @"Not on a WiFi Net, Dumbass!";
         return;
         
     } else {
-        [self.spinner stopAnimating];
-
         self.iphoneIPAddress = [NetUtils getIPAddress];
         self.mainStatusLabel.text = [NSString stringWithFormat:@"My IP: %@", self.iphoneIPAddress];
     }
@@ -50,7 +47,7 @@
     
     NSArray *ipParts = [self.iphoneIPAddress componentsSeparatedByString:@"."];
     
-    for (int lowIp=2; lowIp<35; lowIp++) {
+    for (int lowIp=2; lowIp<=35; lowIp++) {
         NSString *toPing = [NSString stringWithFormat:@"http://%@.%@.%@.%d/api/v1/overplayos/index.php?command=identify", ipParts[0], ipParts[1], ipParts[2], lowIp];
         //NSLog(@"Pinging: %@", toPing);
         
@@ -65,6 +62,7 @@
                  toAdd.location = [responseObject objectForKey:@"location"];
                  [self.availableOverplayers addObject:toAdd];
                  dispatch_async(dispatch_get_main_queue(), ^{
+                     [self.refreshControl endRefreshing];
                      [self.foundUnitsTable reloadData];
                  });
                  
@@ -96,11 +94,16 @@
     
     self.foundUnitsTable.dataSource = self;
     self.foundUnitsTable.delegate = self;
+    self.foundUnitsTable.separatorStyle = UITableViewCellSeparatorStyleNone;
     
-    //self.availableOverplayers = [NSMutableArray arrayWithObjects:op1, op2, op3, nil];
     self.availableOverplayers = [NSMutableArray new];
     
-
+    //[self.foundUnitsTable reloadData];
+    
+    self.refreshControl = [[UIRefreshControl alloc] init];
+    
+    [self.refreshControl addTarget:self action:@selector(findOverplayers) forControlEvents:UIControlEventValueChanged];
+    [self.foundUnitsTable addSubview:self.refreshControl];
     
     [self findOverplayers];
     
@@ -116,7 +119,7 @@
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 
 {
-    
+    //[self findOverplayers];
     return [self.availableOverplayers count];
     
 }
