@@ -7,8 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "GCDAsyncUdpSocket.h"
 
-@interface FirstViewController : UIViewController < UITableViewDelegate, UITableViewDataSource>
+@interface FirstViewController : UIViewController < UITableViewDelegate, UITableViewDataSource, GCDAsyncUdpSocketDelegate>
 
 
 @end

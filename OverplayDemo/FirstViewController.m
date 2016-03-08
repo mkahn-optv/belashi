@@ -20,25 +20,16 @@
 @property (strong, nonatomic) NSMutableArray *availableOverplayers;
 @property (strong, nonatomic) NSArray *sortedOverplayers;
 @property (strong, nonatomic) NSString *iphoneIPAddress;
+@property (strong, nonatomic) GCDAsyncUdpSocket *socket;
 
 @property (strong, nonatomic) UIRefreshControl *refreshControl;
-@property (nonatomic, assign) BOOL findingOverplayers;
 
 @end
 
 @implementation FirstViewController
 
-
--(void)sortByIpAndReload {
+- (void)sortByIpAndReload {
     // Call this instead of [self.foundUnitsTable reloadData].
-    
-    /*NSMutableArray *arrayToSort = [[NSMutableArray alloc] initWithArray:self.availableOverplayers copyItems:NO];
-    arrayToSort = (NSMutableArray *)[arrayToSort sortedArrayUsingComparator:^NSComparisonResult(id a, id b) {
-        NSString *ipA = [(Overplayer *)a ipAddress];
-        NSString *ipB = [(Overplayer *)b ipAddress];
-        
-        return [ipA compare:ipB options:NSNumericSearch];
-    }];*/
     
     self.sortedOverplayers = [self.availableOverplayers sortedArrayUsingComparator:^NSComparisonResult(id a, id b) {
         NSString *ipA = [(Overplayer *)a ipAddress];
@@ -57,18 +48,11 @@
     
     [self.refreshControl beginRefreshing];
     
-    if (self.findingOverplayers == YES) {
-        [self.refreshControl endRefreshing];
-        return;
-    } else {
-        self.findingOverplayers = YES;
-    }
-    
     NSString *ipaddr = [NetUtils getIPAddress];
     
     if ([ipaddr hasPrefix:@"error"]){
         [self.refreshControl endRefreshing];
-        self.mainStatusLabel.text = @"Not on a WiFi Net, Dumbass!";
+        self.mainStatusLabel.text = @"Not on a WiFi Network";
         return;
         
     } else {
@@ -78,12 +62,12 @@
     
     [self.availableOverplayers removeAllObjects];
     
-    AFHTTPRequestOperationManager *manager = [[AFHTTPRequestOperationManager alloc] init];
+    /*AFHTTPRequestOperationManager *manager = [[AFHTTPRequestOperationManager alloc] init];
     
     dispatch_group_t group = dispatch_group_create();
     
     NSArray *ipParts = [self.iphoneIPAddress componentsSeparatedByString:@"."];
-    
+    // 2 to 254
     for (int lowIp = 2; lowIp <= 254; lowIp++) {
         NSString *toPing = [NSString stringWithFormat:@"http://%@.%@.%@.%d/api/v1/overplayos/index.php?command=identify", ipParts[0], ipParts[1], ipParts[2], lowIp];
         Overplayer *toAdd = [Overplayer new];
@@ -118,7 +102,7 @@
         self.findingOverplayers = NO;
         [self.refreshControl endRefreshing];
         [self sortByIpAndReload];
-    });
+    }); */
 }
 
 
@@ -126,7 +110,15 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    self.findingOverplayers = NO;
+    self.socket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+    NSError *err = nil;
+    if (![self.socket bindToPort:9090 error:&err]) {
+        NSLog(@"Error connecting socket: %@", err);
+    }
+    if (![self.socket beginReceiving:&err]) {
+        [self.socket close];
+        NSLog(@"UDP socket cannot begin receiving packets: %@", err);
+    }
     
     self.foundUnitsTable.dataSource = self;
     self.foundUnitsTable.delegate = self;
@@ -144,6 +136,68 @@
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+#pragma - markup GCDAsyncUdpSocket Delegate Methods
+
+- (void)udpSocket:(GCDAsyncUdpSocket *)sock didReceiveData:(NSData *)data
+      fromAddress:(NSData *)address
+withFilterContext:(id)filterContext{
+    
+    NSError *err = nil;
+    NSDictionary *overplayerJson = [NSJSONSerialization JSONObjectWithData:data options:0 error:&err];
+    if (err) {
+        NSLog(@"Error creating dict from json: %@", err);
+    }
+    
+    NSString *addressString;
+    struct sockaddr *sockAddr = (struct sockaddr *)[address bytes];
+    switch (sockAddr->sa_family) {
+            
+        case AF_INET: {    // only processing ip4 addresses
+            
+            struct sockaddr_in *ip4 = (struct sockaddr_in *)[address bytes];
+            char dest[INET_ADDRSTRLEN];
+            addressString = [NSString stringWithFormat:@"%s", inet_ntop(AF_INET, &ip4->sin_addr, dest, sizeof dest)];
+        }
+            break;
+        /*
+        case AF_INET6: {
+        
+            struct sockaddr_in6 *ip6 = (struct sockaddr_in6 *)[address bytes];
+            char dest[INET6_ADDRSTRLEN];
+            addressString = [NSString stringWithFormat:@"%s", inet_ntop(AF_INET6, &ip6->sin6_addr, dest, sizeof dest)];
+        }
+            break;
+            
+        default:
+            addressString = @"Unable to read IP";
+            break;
+         */
+    }
+    
+    if (addressString) {
+        NSLog(@"Found %@! Location:%@ IP:%@", overplayerJson[@"name"], overplayerJson[@"location"], addressString);
+        
+        for (Overplayer *obj in self.availableOverplayers) {
+            if ([obj.ipAddress isEqualToString:addressString]) {
+                [obj setSystemName:overplayerJson[@"name"]];
+                [obj setLocation:overplayerJson[@"location"]];
+                [self.refreshControl endRefreshing];
+                [self.foundUnitsTable reloadData];
+                return;
+            }
+        }
+        
+        Overplayer *toAdd = [Overplayer new];
+        toAdd.ipAddress = addressString;
+        toAdd.systemName = overplayerJson[@"name"];
+        toAdd.location = overplayerJson[@"location"];
+        [self.availableOverplayers addObject:toAdd];
+        [self.refreshControl endRefreshing];
+        [self sortByIpAndReload];
+    }
+
 }
 
 
@@ -175,11 +229,6 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [self performSegueWithIdentifier:@"toOPControl" sender:nil];
-}
-
-
-- (IBAction)refresh:(id)sender {
-    [self findOverplayers];
 }
 
 

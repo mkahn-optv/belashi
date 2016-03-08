@@ -18,7 +18,7 @@
 		1ED000F01C5BE4E40051BC3C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1ED000EE1C5BE4E40051BC3C /* Main.storyboard */; };
 		1ED000F21C5BE4E40051BC3C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1ED000F11C5BE4E40051BC3C /* Assets.xcassets */; };
 		1ED000F51C5BE4E40051BC3C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1ED000F31C5BE4E40051BC3C /* LaunchScreen.storyboard */; };
-		256114800A65947CAC732C80 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C4413967F2CC876D75646C64 /* libPods.a */; };
+		4ABA3C377263BC526BC10FB2 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89FA3E779E0E74870B25AB1E /* libPods.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,7 +43,7 @@
 		1ED000F41C5BE4E40051BC3C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1ED000F61C5BE4E40051BC3C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		39989181657C31AE975852DF /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
-		C4413967F2CC876D75646C64 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		89FA3E779E0E74870B25AB1E /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,7 +51,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				256114800A65947CAC732C80 /* libPods.a in Frameworks */,
+				4ABA3C377263BC526BC10FB2 /* libPods.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -121,7 +121,7 @@
 		B92B6B6360CAE2082A37276D /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				C4413967F2CC876D75646C64 /* libPods.a */,
+				89FA3E779E0E74870B25AB1E /* libPods.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
